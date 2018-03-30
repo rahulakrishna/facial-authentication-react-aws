@@ -5,14 +5,14 @@ const AWS = window.AWS;
 AWS.config.update(aws_config);
 
 const AWSUtil = (()=>{
-    const bucket = 'face-rekognition-shyam';
+    const bucket = 'online-voting';
     const sourceImage = 'source.jpg';
-    const targetImage = 'rahul.jpg';
+    // const targetImage = 'rahul.jpg';
 
     let s3 = new AWS.S3( { params: { Bucket : bucket } } );
     let rekognition = new AWS.Rekognition();
 
-    const compareFacesWithRekognition = () => {
+    const compareFacesWithRekognition = (id) => {
         let compareFacePromise = rekognition.compareFaces(
           {
             SimilarityThreshold: 90,
@@ -25,12 +25,12 @@ const AWSUtil = (()=>{
             TargetImage: {
               S3Object: {
                 Bucket: bucket,
-                Name: targetImage
+                Name: `${id}.jpg`
               }
             }
           }
         ).promise();
-    
+
         return compareFacePromise
           .then((data) => {
             console.log(data);
@@ -40,7 +40,7 @@ const AWSUtil = (()=>{
           });
       }
 
-      const compareFaces = (buffer) => {
+      const compareFaces = (buffer,id) => {
         let putObjectPromise = s3.putObject(
           {
             Key: sourceImage,
@@ -49,10 +49,11 @@ const AWSUtil = (()=>{
             ContentType: 'image/jpeg'
           }
         ).promise();
-    
+
         return putObjectPromise
-          .then(() => {
-            return compareFacesWithRekognition();
+          .then((data) => {
+            console.log(data)
+            return compareFacesWithRekognition(id);
           }).catch(() => {
             return false;
           });
